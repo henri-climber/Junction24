@@ -8,3 +8,9 @@ leafmap
 streamlit-image-comparison
 geopy
 shapely
+folium
+pandas
+numpy
+click
+python-dotenv
+openai
