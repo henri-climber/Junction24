@@ -1,7 +1,13 @@
 import streamlit as st
 import folium
+from click import style
+from streamlit import columns
 from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
+
+# create state variable for storing drawings
+if st.session_state.get('drawings') is None:
+    st.session_state.drawings = []
 
 st.set_page_config(layout="wide")
 st.title("Draw Your House on the Map")
@@ -10,14 +16,19 @@ st.title("Draw Your House on the Map")
 address = st.text_input("Enter your address or street name:")
 
 if address:
+    location = None
+
     # Geocode the address
     geolocator = Nominatim(user_agent="streamlit_app")
-    location = geolocator.geocode(address)
+    helper = geolocator.geocode(address)
+    if helper:
+        location = helper
+    else:
+        st.write("Address not found. Please enter a valid address.", color = "red")
 
     if location:
         lat, lon = location.latitude, location.longitude
-        st.write(f"Coordinates: {lat}, {lon}")
-
+      #  st.write(f"Coordinates: {lat}, {lon}")
         # Create a folium map centered on the address
         m = folium.Map(location=[lat, lon], zoom_start=18)
 
@@ -35,15 +46,20 @@ if address:
         )
         draw.add_to(m)
 
-        # Render the map in Streamlit
-        map_data = st_folium(m, width=700, height=500)
+        cols = st.columns([0.15, 0.7 , 0.15])
+        with cols[1]:
+            # Render the map in Streamlit
+            map_data = st_folium(m, use_container_width=True, height = 500)
 
         # Check if a polygon was drawn and extract its coordinates
         if map_data and 'all_drawings' in map_data:
-            drawings = map_data['all_drawings']
-            if drawings:
-                # Only capture the first polygon drawn
-                first_polygon = drawings[0]
-                st.write("Polygon Coordinates:", first_polygon['geometry']['coordinates'])
-    else:
-        st.write("Address not found. Please enter a valid address.")
+            st.session_state.drawings = map_data['all_drawings']
+
+# Define two columns
+left, right = st.columns(2)
+
+# Check if 'drawings' is in session state
+if st.session_state.get('drawings'):
+    # Display buttons in columns
+    left.button(f"🚀 Continue with {len(st.session_state.drawings)} selections.", use_container_width=True, type = "primary")
+    right.button("🔁 Select another location", use_container_width=True)
