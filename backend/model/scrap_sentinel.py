@@ -45,7 +45,7 @@ def polygon_to_bbox(polygon_coords):
     return [min_lon, min_lat, max_lon, max_lat]
 
 
-def get_data(polygon_coords, time_interval, resolution, config, evalscript):
+def get_data(polygon_coords, time_interval, resolution, evalscript):
     """
     Download Sentinel-2 data for a given area of interest, time interval, resolution, and EvalScript.
 
