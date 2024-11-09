@@ -1,3 +1,5 @@
 streamlit_frontend/starthack-417820-0bcdfc93b42c.json
+backend/model/output/*
+backend/model/.env
 .idea
 .env
