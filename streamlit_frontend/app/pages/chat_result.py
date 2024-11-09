@@ -1,101 +1,192 @@
+# streamlit run app.py
 import streamlit as st
-import folium
-from typing import List
-from streamlit_folium import st_folium
-from geopy.geocoders import Nominatim
-from shapely.geometry import Point, Polygon
-from typing import Optional
-from app.pages.Models.Polygon_farmer import PolygonFarmer
+from dotenv import load_dotenv
+from openai import OpenAI
+import os
+import time
+import markdown
+
+# Load environment variables
+load_dotenv()
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+# Valid types of user input
+SPACE_DATA_TYPES = ['flood risk', 'irrigation', 'fire risk']
+
+# Session state initialization
+# Contains: messages
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+possible_function_callbacks = {
+    "create_areas_to_monitor": "pages/chat_polygonSelection.py",
+}
 
 
-def select_and_display_details_for_polygon():
-    def style1(selected):
-        return {
-            'fillColor': 'red',
-            'color': 'red',
-            'weight': 2
+# Clean user query
+def clean_user_query(user_query):
+    system_prompt = '''You are an Earth Observation (EO) Assistant, specialized in making satellite data accessible and actionable for users. Your role is to bridge the gap between technical EO capabilities and practical user needs.
+
+    RESPONSIBILITIES:
+    1. Education: Help users understand how Earth observation can benefit their specific use case
+    2. Guidance: Direct users to appropriate analysis tools and visualizations (or simply be helpful)
+    3. Analysis: Facilitate data interpretation and insights
+
+    STYLE:
+    - Use markdown formatting
+    - Provide concise responses with bullet points for clarity when appropriate
+    - Avoid walls of text or walls of bullet points (max 3 bullet points)
+    - Avoid technical jargon (e.g. "EO" or "function" or "parameter")
+
+    STRATEGY:
+    - Explain EO data and how it can be useful in your first 2 messages
+    - If we don't have a function for the user's query, reply with useful answers (linking to resources) and give user a hint about what we can help with
+    - If the user's query is not clear, ask for clarification in a few back-and-forth messages
+
+    FUNCTION CALL:
+    - Confirm input parameter details (e.g., their city or address) before calling a function
+    - When ready to call a function, format your response exactly as: function_name||param1||param2||paramN
+    - Do NOT include any other text or formatting in the message where you call a function
+
+    AVAILABLE FUNCTIONS:
+    create_areas_to_monitor(location)
+    - Purpose: Set up monitoring zones for vegetation and environmental analysis
+    - Parameter: location (like a city or street, something you could type into google maps. NOT a country)
+    - Best for: Agricultural, forestry, and land management applications
+    - Description: Allows the user to mark areas of interest on a map based on a location input, enabling them to receive insights like vegetation health, soil moisture, irrigation needs, and environmental conditions.
+    '''
+
+    # Convert session state messages to OpenAI format
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in st.session_state.messages:
+        role = "user" if msg["is_user"] else "assistant"
+        messages.append({"role": role, "content": msg["content"]})
+
+    # Generate response
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        temperature=0.3,
+        max_tokens=200)
+    return response.choices[0].message.content
+
+
+# Get assistant response
+def check_function_callback(response):
+    # check if response has || to indicate a function callback
+    if "||" in response:
+        callback_id, args = response.split("||")
+        if callback_id in possible_function_callbacks:
+            return f"Callback: {callback_id} with args: {args}"
+    return response
+
+
+# Create the HTML for a message bubble with consistent styling.
+def create_message_html(html_content, style, bg_color):
+    return (f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
+            f'<div style="background-color: {bg_color}; color: white; padding: 0.5rem 1rem; '
+            f'border-radius: 15px; max-width: 80%;">{html_content}</div></div>')
+
+
+def display_message(text, is_user=False, with_delay=False):
+    style = "flex-end" if is_user else "flex-start"
+    bg_color = "#2b313e" if is_user else "#0e1117"
+
+    if not with_delay:
+        html_content = markdown.markdown(text)
+        st.markdown(create_message_html(html_content, style, bg_color), unsafe_allow_html=True)
+        return
+
+    # Split text into lines first to preserve markdown formatting
+    lines = text.split('\n')
+    placeholder = st.empty()
+    displayed_lines = []
+
+    for line in lines:
+        # For each line, split into words and display progressively
+        words = line.split()
+        for i in range(len(words)):
+            current_line = ' '.join(words[:i + 1])
+            # Combine with previously displayed lines
+            current_text = '\n'.join(displayed_lines + [current_line])
+            html_content = markdown.markdown(current_text)
+
+            placeholder.markdown(
+                create_message_html(html_content, style, bg_color),
+                unsafe_allow_html=True
+            )
+            time.sleep(0.03)
+
+        # After completing a line, add it to displayed lines
+        displayed_lines.append(line)
+
+
+def main():
+    # Set page config
+    st.set_page_config(page_title="MapStronaut", page_icon="🌍")
+
+    # Set font sizes
+    st.markdown("""<style>
+        .stMarkdown div div { font-size: 18px !important}
+        textarea[data-testid="stChatInputTextArea"] {
+            font-size: 18px !important
         }
+        p, li { font-size: 18px !important }
 
-    def style2(selected):
-        return {
-            'fillColor': 'blue',
-            'color': 'blue',
-            'weight': 0.5
+        .stMarkdown div div p { 
+            margin: 0 !important;
         }
+        h1 a {display: none !important}
+        </style>""", unsafe_allow_html=True)
+    st.markdown("<br><br><h1 style='text-align: center;'>How can space data help you? 🌍</h1>", unsafe_allow_html=True)
 
-    # Ensure session state stores the polygons
-    if "polygons" not in st.session_state:
-        st.session_state.polygons = []
-    if "selected_polygon" not in st.session_state:
-        st.session_state.selected_polygon: Optional[PolygonFarmer] = None
+    # Only show example queries if there are no messages yet AND no current query
+    if not st.session_state.messages and not st.session_state.get('current_query'):
+        example_queries = [
+            ("🚜 Small farm in the Alps", "I'm a small farmer in the Alps. How can I use space data?"),
+            ("🔥 Fire risk in Athens", "What's the wildfire risk in Athens?"),
+            ("🌊 Flood risk in Mumbai", "What's the flood risk in Mumbai?")]
 
-    # write function that calculate avg coordinates of all polygons
-    def avg_coords(polygons: List[PolygonFarmer]):
-        if not polygons:
-            return None
+        # Create example buttons
+        for button_text, full_example_query in zip(st.columns(3), example_queries):
+            if button_text.button(full_example_query[0]):
+                st.session_state['current_query'] = full_example_query[1]
+                st.rerun()  # Immediately rerun to clear buttons
 
-        sum_lat = 0
-        sum_lon = 0
-        for p in polygons:
-            coords = p.polygon['geometry']['coordinates'][0][0]
-            sum_lat += coords[1]
-            sum_lon += coords[0]
+    current_query = st.chat_input("Message MapStronaut") or st.session_state.get('current_query')
 
-        avg_lat = sum_lat / len(polygons)
-        avg_lon = sum_lon / len(polygons)
-        return avg_lat, avg_lon
+    if current_query:
+        # Immediately show the user's message
+        st.session_state.messages.append({"content": current_query, "is_user": True})
 
-    # calc middle
-    middle = None
-    if "polygons" in st.session_state:
-        middle = avg_coords(st.session_state.polygons)
+        # Display all previous messages without delay
+        for message in st.session_state.messages[:-1]:
+            display_message(message['content'], message['is_user'])
 
-    if middle:
-        st.title("Review Your Selected Area")
+        # Display user's new message
+        display_message(current_query, True)
 
-        lat, lon = middle
-        # Create a folium map centered on the address
-        m = folium.Map(location=[lat, lon], zoom_start=18)
+        # Add spinner while processing response
+        with st.spinner(''):
+            ai_resp = clean_user_query(current_query)
+            response = check_function_callback(ai_resp)
 
-        # Add previously drawn polygons to the map
-        for p in st.session_state.polygons:
-            if p == st.session_state.selected_polygon:
-                folium.GeoJson(p.polygon, name="Polygon", style_function=style1).add_to(m)
-            else:
-                folium.GeoJson(p.polygon, name="Polygon", style_function=style2).add_to(m)
+            # Add assistant's response to messages
+            st.session_state.messages.append({"content": response, "is_user": False})
 
-        # Center and add marker on the selected polygon if exists
-        if st.session_state.selected_polygon:
-            coords = st.session_state.selected_polygon.polygon['geometry']['coordinates'][0]
-            centroid_lat = sum(point[1] for point in coords) / len(coords)
-            centroid_lon = sum(point[0] for point in coords) / len(coords)
-            folium.Marker([centroid_lat, centroid_lon], popup="Selected Polygon", color="red").add_to(m)
-            m.location = [centroid_lat, centroid_lon]
-            m.zoom_start = 18
+        # Display the AI response with delay effect
+        display_message(response, False, with_delay=True)
 
-        # Render the map in Streamlit
-        map_data = st_folium(m, use_container_width=True, height=500)
+        # Clear current query and rerun
+        st.session_state.pop('current_query', None)
+        time.sleep(0.5)  # Small pause before rerun
+        st.rerun()
 
-        # Handle polygon selection
-        if map_data and 'last_clicked' in map_data and map_data['last_clicked']:
-            last_clicked = map_data['last_clicked']
-            click_point = Point(last_clicked['lng'], last_clicked['lat'])
+    else:
+        # Display existing messages when no new query
+        for message in st.session_state.messages:
+            display_message(message['content'], message['is_user'])
 
-            for polygon_farmer in st.session_state.polygons:
-                # Convert the polygon's coordinates to a Shapely Polygon
-                polygon_coords = polygon_farmer.polygon['geometry']['coordinates'][0]
-                polygon_shapely = Polygon(polygon_coords)
 
-                # Check if the clicked point is inside the polygon
-                if polygon_shapely.contains(click_point):
-                    if polygon_farmer == st.session_state.selected_polygon:
-                        st.session_state.selected_polygon = None
-                    else:
-                        st.session_state.selected_polygon = polygon_farmer
-
-                    st.rerun()
-
-    # Display selected polygon details below the map
-    if st.session_state.selected_polygon:
-        st.write("### Selected Polygon Details")
-        # Additional information can be added here
+if __name__ == "__main__":
+    main()
