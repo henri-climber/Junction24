@@ -32,7 +32,6 @@ def format_metric(value, metric_type):
     return str(value)
 
 
-
 # Title
 st.title("Field Monitoring Dashboard")
 
@@ -128,6 +127,7 @@ st.subheader("Historical Data")
 # Tab layout for different historical views
 tab1, tab2 = st.tabs(["7 Days", "30 Days"])
 
+
 # Generate sample historical data
 def get_historical_data(days):
     dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
@@ -137,6 +137,7 @@ def get_historical_data(days):
         'Soil Moisture': np.random.uniform(40, 60, days),
         'Temperature': np.random.uniform(20, 28, days)
     })
+
 
 with tab1:
     hist_data_7 = get_historical_data(7)

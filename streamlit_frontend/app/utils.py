@@ -10,3 +10,4 @@ def style2(selected):
         'color': 'blue',
         'weight': 0.5
     }
+

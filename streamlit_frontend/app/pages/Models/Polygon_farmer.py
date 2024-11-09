@@ -1,8 +1,10 @@
-from typing import List
+from shapely.geometry import Polygon
+
+
 class PolygonFarmer:
 
-    #create a class for every single polygon
-    def __init__(self, polygon, fetched_data=False, water = None, soil_moisture = None, vegetation_health = None):
+    # create a class for every single polygon
+    def __init__(self, polygon, fetched_data=False, water=None, soil_moisture=None, vegetation_health=None):
         self.polygon = polygon
         self.water = water
         self.fetched_data = fetched_data
@@ -12,19 +14,34 @@ class PolygonFarmer:
         self.area = self.calculate_area()
         self.color = self.calculate_color()
 
+    from shapely.geometry import Polygon
+
     def polygon_centroid(self):
-        #calculate the centroid of the polygon
-        x, y = 0, 0
-        coords = self.polygon["geometry"]["coordinates"][0]
-        for i in range(len(coords)):
-            x += coords[i][0]
-            y += coords[i][1]
-        x /= len(coords)
-        y /= len(coords)
-        return x, y
+        try:
+            # Extract coordinates from the GeoJSON structure
+            coords = self.polygon["geometry"]["coordinates"][0]
+
+            # Ensure each point is in (longitude, latitude) format
+            coords = [(lon, lat) for lon, lat in coords]
+
+            # Create a Shapely Polygon and calculate its centroid
+            polygon = Polygon(coords)
+
+            # Check if the polygon is valid (non-self-intersecting, closed ring, etc.)
+            if not polygon.is_valid:
+                raise ValueError("Invalid polygon geometry")
+
+            centroid = polygon.centroid
+
+            # Return the centroid's coordinates (longitude, latitude)
+            return centroid.x, centroid.y  # x is longitude, y is latitude
+
+        except Exception as e:
+            print(f"An error occurred while calculating the centroid: {e}")
+            return None, None
 
     def calculate_area(self):
-        #calculate the area of the polygon
+        # calculate the area of the polygon
         coords = self.polygon["geometry"]["coordinates"][0]
         n = len(coords)
         area = 0
@@ -36,15 +53,14 @@ class PolygonFarmer:
         return area
 
     def calculate_color(self):
-        #calculate average of all three values and return color on scale from red to green
+        # calculate average of all three values and return color on scale from red to green
 
         if not self.fetched_data:
             self.color = '#0000FF'
             return self.color
 
-
         avg = (self.water + self.soil_moisture + self.vegetation_health) / 3
-        #make 10 intervals
+        # make 10 intervals
         if avg < 10:
             self.color = '#FF0000'
         elif avg < 20:
@@ -66,13 +82,3 @@ class PolygonFarmer:
         else:
             self.color = '#33FF00'
         return self.color
-
-
-
-
-
-
-
-
-
-

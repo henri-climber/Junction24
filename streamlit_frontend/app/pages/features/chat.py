@@ -5,6 +5,8 @@ from openai import OpenAI
 import os
 import time
 
+from app.pages.chat_polygonSelection import create_areas_to_monitor
+
 # Load environment variables
 load_dotenv()
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -42,6 +44,7 @@ When presenting the chosen algorithm to the user, base your answers on the code 
 
 If you are about to call the function, your response MUST follow this PRECISE format: 
 Function_name||parameter1||parameter2||parameter3||…||parametern. 
+Be concise and clear in your responses. Max 2 bullet points and stick to what our algorithms can do!
 
 Output it exactly like this with NO other characters.
 
@@ -69,7 +72,7 @@ MEMORY BASED ON PREVIOUS USER INTERACTIONS: f"User query: {st.session_state.mess
     response = client.chat.completions.create(model="gpt-4o",
                                               messages=[{"role": "system", "content": system_prompt},
                                                         {"role": "user", "content": f"User query: {user_query}"}],
-                                              temperature=0.3, max_tokens=100)
+                                              temperature=0.3, max_tokens=200)
     print(response)
     return response.choices[0].message.content
 
@@ -80,18 +83,23 @@ def get_assistant_response(resp):
     if "||" in resp:
         callback_id, args = resp.split("||")
         if callback_id in possible_function_callbacks:
-            return f"{callback_id} with args: {args}"
-
+            # Call the function with the provided arguments
+            if callback_id == "create_areas_to_monitor":
+                return resp, callback_id, args
     return resp
 
 
-def display_message(text, is_user=False):
-    style = "flex-end" if is_user else "flex-start"
-    bg_color = "#2b313e" if is_user else "#0e1117"
-    st.markdown(
-        f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
-        f'<div style="background-color: {bg_color}; color: white; padding: 0.75rem; '
-        f'border-radius: 15px; max-width: 80%;">{text}</div></div>', unsafe_allow_html=True)
+def display_message(text, is_user):
+    if type(text) is type(()):
+        if text[1] == "create_areas_to_monitor":
+            create_areas_to_monitor(text[2])
+    else:
+        style = "flex-end" if is_user else "flex-start"
+        bg_color = "#2b313e" if is_user else "#0e1117"
+        st.markdown(
+            f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
+            f'<div style="background-color: {bg_color}; color: white; padding: 0.75rem; '
+            f'border-radius: 15px; max-width: 80%;">{text}</div></div>', unsafe_allow_html=True)
 
 
 def main():
