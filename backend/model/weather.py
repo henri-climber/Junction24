@@ -67,7 +67,8 @@ def get_forecast_weather(api_key, lat, lon):
 
 
 # Main function to check for rain
-def check_for_rain(api_key, lat, lon):
+def check_for_rain(lat, lon):
+    api_key = API_KEY
     current_weather = get_current_weather(api_key, lat, lon)
     forecast_weather = get_forecast_weather(api_key, lat, lon)
 
@@ -101,4 +102,4 @@ if __name__ == "__main__":
         [16.249166, 52.656369],
     ]
     lon, lat = polygon_centroid(polygon_coords)
-    print(check_for_rain(API_KEY, lat, lon))
+    print(check_for_rain(lat, lon))

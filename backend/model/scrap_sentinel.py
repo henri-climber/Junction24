@@ -45,14 +45,31 @@ def polygon_to_bbox(polygon_coords):
     return [min_lon, min_lat, max_lon, max_lat]
 
 
-def get_data(polygon_coords, time_interval, resolution, evalscript):
+def calculate_dynamic_resolution(bbox):
+    min_lon, min_lat, max_lon, max_lat = bbox
+    lon_diff = max_lon - min_lon
+    lat_diff = max_lat - min_lat
+
+    # Set base resolution factor based on typical values for Sentinel-2
+    # Increase the resolution (decrease resolution value) for smaller areas
+    area = lon_diff * lat_diff  # Approximate area in degrees²
+    if area > 0.05:
+        resolution = 20  # Low resolution for large areas
+    elif area > 0.01:
+        resolution = 10  # Medium resolution
+    else:
+        resolution = 5  # High resolution for small areas
+
+    return resolution
+
+
+def get_data(polygon_coords, time_interval, evalscript):
     """
-    Download Sentinel-2 data for a given area of interest, time interval, resolution, and EvalScript.
+    Download Sentinel-2 data for a given area of interest, time interval, and EvalScript.
 
     Parameters:
     - polygon_coords (list): Coordinates defining the area of interest as a polygon.
     - time_interval (tuple): Date range as a tuple (start_date, end_date) in "YYYY-MM-DD" format.
-    - resolution (int): Spatial resolution in meters.
     - config: SentinelHub configuration instance.
     - evalscript (str): Custom EvalScript for processing Sentinel-2 data.
 
@@ -60,7 +77,9 @@ def get_data(polygon_coords, time_interval, resolution, evalscript):
     - image (array): Downloaded image data.
     """
     # Define bounding box and size
-    bbox = BBox(bbox=polygon_to_bbox(polygon_coords), crs=CRS.WGS84)
+    bbox_coords = polygon_to_bbox(polygon_coords)
+    bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
+    resolution = calculate_dynamic_resolution(bbox_coords)
     size = bbox_to_dimensions(bbox, resolution=resolution)
 
     # Define the request for Sentinel-2 data
@@ -73,14 +92,18 @@ def get_data(polygon_coords, time_interval, resolution, evalscript):
                 time_interval=time_interval,
             )
         ],
-        responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
+        responses=[
+            SentinelHubRequest.output_response("default", MimeType.PNG),
+            SentinelHubRequest.output_response("index", MimeType.TIFF),
+        ],
         bbox=bbox,
         size=size,
         config=config,
     )
 
     # Download and save the data
-    image = request.get_data(save_data=True)[0]
+    image = request.get_data()[0]
+
     return image
 
 
@@ -91,7 +114,6 @@ if __name__ == "__main__":
         return [B04, B03, B02];
     """
     time_interval = ("2022-01-01", "2022-01-10")
-    resolution = 10
     polygon_coords = [
         [16.249166, 52.656369],
         [16.242085, 52.650071],
@@ -100,5 +122,5 @@ if __name__ == "__main__":
         [16.2641, 52.658243],
         [16.249166, 52.656369],
     ]
-    image = get_data(polygon_coords, time_interval, resolution, config, evalscript)
+    image = get_data(polygon_coords, time_interval, evalscript)
     print(image)
