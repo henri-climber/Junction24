@@ -7,3 +7,4 @@ geemap
 leafmap
 streamlit-image-comparison
 geopy
+shapely
