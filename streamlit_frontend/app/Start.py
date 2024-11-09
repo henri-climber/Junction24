@@ -4,7 +4,12 @@ import numpy as np
 
 st.title('Uber pickups in NYC')
 
-DATE_COLUMN = 'date/time'
+if st.button("Home"):
+    st.switch_page("pages/01_Gee_login.py")
+if st.button("Page 1"):
+    st.switch_page("pages/02_Gee_overview.py")
+
+"""DATE_COLUMN = 'date/time'
 DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
             'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
@@ -34,4 +39,4 @@ filtered_data = data[data[DATE_COLUMN].dt.hour == hour_to_filter]
 
 st.subheader('Map of all pickups at %s:00' % hour_to_filter)
 st.map(filtered_data)
-
+"""
