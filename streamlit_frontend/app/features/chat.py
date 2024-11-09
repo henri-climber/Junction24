@@ -13,49 +13,75 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 SPACE_DATA_TYPES = ['flood risk', 'irrigation', 'fire risk']
 
 # Session state initialization
-# Contains: messages, last_valid_type, last_valid_location
-if 'messages' not in st.session_state: st.session_state.messages = []
-if 'last_valid_type' not in st.session_state: st.session_state.last_valid_type = None
-if 'last_valid_location' not in st.session_state: st.session_state.last_valid_location = None
+# Contains: messages
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+possible_function_callbacks = {
+    "create_areas_to_monitor": "pages/chat_polygonSelection.py",
+}
+
 
 # Clean user query
 def clean_user_query(user_query):
-    system_prompt = f"""
-    Extract data type and city from user query.
-    Valid data types are ONLY: {', '.join(SPACE_DATA_TYPES)}.
-    Format output EXACTLY as: DATA_TYPE||CITY
-    If data type not valid, output 'invalid' as DATA_TYPE.
-    If not a real city, output 'missing' as CITY.
+    system_prompt = f'''
+    .....
+    You are a language model designed specifically for an Earth observation (EO) data application, with the primary goal of making EO data accessible to the general public. Your unique role serves as a bridge between clients seeking insights and the backend database that houses the complex datasets.
 
-    EXAMPLES
-	Input: wildfire risk in australia
-	Output: fire risk||missing
-	
-	Input: should i worry of tornadoes in munich of baviera
-	Output: invalid||Munich
+The typical user of this application may not have a specialized background in earth observation or data analysis, so it's important to communicate clearly without assuming prior knowledge. 
+
+Your mission is twofold:
+
+1.To educate individuals from diverse backgrounds about the fundamentals of Earth observation. This includes explaining what EO data is, how it can be utilized in various aspects of everyday life, and illustrating its relevance to their specific contexts. By demystifying this data, you enable users to understand its importance and make informed decisions based on the information available.
+
+2.After users have recognized potential applications of EO data relevant to their lives, your next objective is to support them in visualizing and analyzing the data they are interested in. The backend system is equipped with a range of functions and algorithms designed for different types of EO data. Once a user has a clear idea of what they want to achieve, you will select the most appropriate algorithm to meet their objectives. 
+
+When presenting the chosen algorithm, the response should follow this precise format: 
+Function_name||parameter1||parameter2||parameter3||…||parametern. 
+
+Take enough time to explain to the user the possible usecases and basics of eo data. Aim for around 5 answers before you call a function.
+
+Output it exactly like this with NO other characters.
+
+Code Documentation for Backend Function:
+
+def create_areas_to_monitor(location): Callback ID: create_areas_to_monitor||location
     """
+    ARGS: location: a city or street, something you could type into google maps
+    
+    This function is intended for users working with planting crops, trees, or similar. 
+    It allows the user to mark areas of interest on a map based on a location input, enabling them to receive insights like:
+    - Vegetation health
+    - Soil moisture
+    - Irrigation needs
+    - Environmental conditions
+    
+    If a user may benefit from this, ask them for their location (City or City with Street). 
+    Then call this function to start their analysis journey.
+    """
+
+MEMORY BASED ON PREVIOUS USER INTERACTIONS: f"User query: {st.session_state.messages}"
+
+    '''
+
     response = client.chat.completions.create(model="gpt-4o",
-        messages=[{"role": "system", "content": system_prompt}, 
-        {"role": "user", "content": f"User query: {user_query}"}],
-        temperature=0.3, max_tokens=100)
+                                              messages=[{"role": "system", "content": system_prompt},
+                                                        {"role": "user", "content": f"User query: {user_query}"}],
+                                              temperature=0.3, max_tokens=100)
+    print(response)
     return response.choices[0].message.content
 
-# Get assistant response
-def get_assistant_response(data_type, location):
-    # Store valid parameters
-    if data_type != 'invalid': st.session_state.last_valid_type = data_type
-    if location != 'missing': st.session_state.last_valid_location = location
-    
-    final_type = st.session_state.last_valid_type or data_type
-    final_location = st.session_state.last_valid_location or location
 
-    if final_type == 'invalid' and final_location == 'missing':
-        return f"Sorry, I need both a city location and the type of spatial information ({', '.join(SPACE_DATA_TYPES)})."
-    elif final_type == 'invalid':
-        return f"Sorry, I can only help with {', '.join(SPACE_DATA_TYPES)}. Which one interests you for {final_location}?"
-    elif final_location == 'missing':
-        return f"Please type a city name to visualize the {final_type} data."
-    return f"Great! Showing {final_type} data for {final_location}..."
+# Get assistant response
+def get_assistant_response(resp):
+    # check if resp has || to indicate a function callback
+    if "||" in resp:
+        callback_id, args = resp.split("||")
+        if callback_id in possible_function_callbacks:
+            return f"Callback: {callback_id} with args: {args}"
+
+    return resp
+
 
 def display_message(text, is_user=False):
     style = "flex-end" if is_user else "flex-start"
@@ -64,6 +90,7 @@ def display_message(text, is_user=False):
         f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
         f'<div style="background-color: {bg_color}; color: white; padding: 0.75rem; '
         f'border-radius: 15px; max-width: 80%;">{text}</div></div>', unsafe_allow_html=True)
+
 
 def main():
     # Set page config
@@ -93,22 +120,22 @@ def main():
                 st.rerun()  # Immediately rerun to clear buttons
 
     current_query = st.chat_input("Message MapStronaut") or st.session_state.get('current_query')
-    
+
     if current_query:
         # Immediately show the user's message
         st.session_state.messages.append({"content": current_query, "is_user": True})
-        
+
         # Display all messages including the new user message
         for message in st.session_state.messages:
             display_message(message['content'], message['is_user'])
-        
+
         # Process the response
-        data_type, location = clean_user_query(current_query).split('||')
-        response = get_assistant_response(data_type, location)
-        
+        ai_resp = clean_user_query(current_query)
+        response = get_assistant_response(ai_resp)
+
         # Add assistant's response to messages
         st.session_state.messages.append({"content": response, "is_user": False})
-        
+
         # Wait 1 second before showing output (otherwise it's too fast)
         time.sleep(1)
 
@@ -120,18 +147,6 @@ def main():
         for message in st.session_state.messages:
             display_message(message['content'], message['is_user'])
 
-    # Display map visualization if available
-    if st.session_state.last_valid_type and st.session_state.last_valid_location:
-        time.sleep(2)
-        st.info("Visualization here", icon="📍")
-        st.markdown("""
-            <style>
-            [data-testid="stAlertContentInfo"] {
-                min-height: 300px;
-                padding: 20px;
-            }
-            </style>
-        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
