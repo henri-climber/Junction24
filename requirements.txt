@@ -6,3 +6,4 @@ rasterio
 geemap
 leafmap
 streamlit-image-comparison
+geopy
