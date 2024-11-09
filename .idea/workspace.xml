@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="8f3b2886-9046-4165-95ad-3779445280a9" name="Changes" comment="setup with gee">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/features/chat.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/features/chat.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_result.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,7 +50,7 @@
   "keyToString": {
     "Python.Start.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "urbanFarmerFrontend",
+    "git-widget-placeholder": "newChat",
     "last_opened_file_path": "/Users/henribreuer/Programmieren/Hackathons/Junction24/streamlit_frontend",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
