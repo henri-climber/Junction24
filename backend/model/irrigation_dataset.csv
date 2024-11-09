@@ -1,0 +1,121 @@
+is_vegetation,vegetation_health,moisture_index,rain_presence,irrigate
+True,Not Healthy,High,True,False
+False,Not Healthy,Low,True,False
+True,Not Healthy,Low,True,False
+True,Healthy,Low,True,False
+True,Not Healthy,Moderate,True,False
+False,Not Healthy,Moderate,True,False
+False,Healthy,High,True,False
+False,Not Healthy,Low,True,False
+True,Healthy,Low,False,False
+False,Not Healthy,Low,True,False
+False,Healthy,High,True,False
+True,Not Healthy,High,True,False
+False,Healthy,Dry,True,False
+False,Healthy,High,False,False
+True,Healthy,High,False,False
+False,Healthy,Low,True,False
+False,Healthy,High,True,False
+False,Healthy,Moderate,False,False
+False,Not Healthy,Low,False,False
+True,Not Healthy,Moderate,True,False
+False,Not Healthy,Dry,True,False
+False,Not Healthy,Dry,False,False
+False,Not Healthy,Low,False,False
+False,Not Healthy,Low,True,False
+True,Not Healthy,Moderate,False,False
+False,Not Healthy,Dry,True,False
+False,Healthy,Dry,True,False
+False,Healthy,Moderate,True,False
+False,Not Healthy,Moderate,False,False
+False,Healthy,Low,True,False
+False,Healthy,High,False,False
+False,Healthy,Moderate,True,False
+False,Healthy,Dry,False,False
+True,Not Healthy,Moderate,True,False
+False,Not Healthy,Low,True,False
+True,Healthy,High,False,False
+True,Healthy,High,True,False
+False,Not Healthy,Dry,True,False
+True,Healthy,Moderate,False,False
+True,Not Healthy,Dry,True,False
+True,Healthy,High,False,False
+True,Healthy,High,True,False
+True,Not Healthy,Moderate,False,False
+True,Healthy,Dry,False,False
+True,Healthy,Low,False,False
+True,Healthy,Low,False,False
+False,Not Healthy,Low,False,False
+True,Healthy,Dry,True,False
+True,Healthy,Dry,False,False
+True,Not Healthy,Low,True,False
+True,Healthy,Low,True,False
+True,Not Healthy,Dry,False,True
+False,Healthy,Moderate,True,False
+False,Healthy,Moderate,False,False
+False,Healthy,Low,True,False
+True,Not Healthy,Low,True,False
+False,Healthy,High,False,False
+False,Healthy,Dry,False,False
+False,Not Healthy,Moderate,True,False
+True,Not Healthy,High,True,False
+False,Not Healthy,Moderate,True,False
+False,Not Healthy,Low,False,False
+True,Not Healthy,Dry,False,True
+False,Not Healthy,Low,True,False
+True,Healthy,Moderate,True,False
+False,Not Healthy,Dry,True,False
+True,Not Healthy,Dry,True,False
+True,Healthy,High,True,False
+True,Not Healthy,Low,False,True
+True,Healthy,Moderate,False,False
+False,Not Healthy,Moderate,True,False
+False,Healthy,High,False,False
+False,Not Healthy,Low,True,False
+False,Healthy,Moderate,True,False
+True,Not Healthy,Dry,False,True
+False,Healthy,High,True,False
+False,Not Healthy,High,True,False
+False,Not Healthy,Low,False,False
+False,Healthy,Moderate,True,False
+True,Healthy,Low,True,False
+False,Healthy,High,True,False
+True,Not Healthy,Moderate,True,False
+True,Healthy,Moderate,False,False
+True,Not Healthy,High,True,False
+True,Healthy,Low,True,False
+True,Not Healthy,Dry,True,False
+True,Not Healthy,Low,True,False
+False,Not Healthy,Low,False,False
+True,Healthy,High,False,False
+True,Not Healthy,Low,False,True
+False,Not Healthy,Dry,False,False
+True,Not Healthy,Dry,False,True
+True,Not Healthy,Moderate,True,False
+True,Healthy,Low,True,False
+False,Not Healthy,Dry,False,False
+False,Healthy,Moderate,False,False
+False,Not Healthy,Dry,True,False
+True,Not Healthy,Dry,True,False
+True,Healthy,High,False,False
+True,Not Healthy,High,True,False
+True,Not Healthy,High,False,False
+True,Healthy,Low,False,False
+False,Healthy,High,False,False
+True,Healthy,Dry,True,False
+False,Not Healthy,Moderate,True,False
+False,Not Healthy,High,True,False
+False,Healthy,High,True,False
+True,Not Healthy,High,True,False
+True,Healthy,Moderate,True,False
+False,Not Healthy,High,True,False
+False,Healthy,Moderate,False,False
+False,Not Healthy,High,False,False
+False,Healthy,Dry,False,False
+True,Not Healthy,Low,True,False
+False,Healthy,Low,False,False
+True,Not Healthy,Low,True,False
+True,Healthy,Moderate,False,False
+False,Not Healthy,Low,True,False
+False,Healthy,Moderate,True,False
+False,Healthy,Moderate,True,False

@@ -6,3 +6,15 @@ rasterio
 geemap
 leafmap
 streamlit-image-comparison
+# For Copernicus
+python-dotenv
+sentinelhub
+geopy
+shapely
+folium
+pandas
+numpy
+click
+python-dotenv
+openai
+
