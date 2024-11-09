@@ -6,8 +6,8 @@ from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 
 # create state variable for storing drawings
-if st.session_state.get('drawings') is None:
-    st.session_state.drawings = []
+if st.session_state.get('polygons') is None:
+    st.session_state.polygons = []
 
 st.set_page_config(layout="wide")
 st.title("Draw Your House on the Map")
@@ -53,13 +53,15 @@ if address:
 
         # Check if a polygon was drawn and extract its coordinates
         if map_data and 'all_drawings' in map_data:
-            st.session_state.drawings = map_data['all_drawings']
+            for p in map_data['all_drawings']:
+                st.session_state.polygons.append(PolygonFarmer())
+            st.session_state.polygons = map_data['all_drawings']
 
 # Define two columns
 left, right = st.columns(2)
 
 # Check if 'drawings' is in session state
-if st.session_state.get('drawings'):
+if st.session_state.get('polygons'):
     # Display buttons in columns
-    left.button(f"🚀 Continue with {len(st.session_state.drawings)} selections.", use_container_width=True, type = "primary")
+    left.button(f"🚀 Continue with {len(st.session_state.polygons)} selections.", use_container_width=True, type = "primary")
     right.button("🔁 Select another location", use_container_width=True)

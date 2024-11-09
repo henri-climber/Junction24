@@ -4,9 +4,11 @@ from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 from shapely.geometry import Point, Polygon
 
-# Ensure session state stores the drawings
-if "drawings" not in st.session_state:
-    st.session_state.drawings = []
+from app.pages.Models.Polygon_farmer import PolygonFarmer
+
+# Ensure session state stores the polygons
+if "polygons" not in st.session_state:
+    st.session_state.polygons = []
 if "selected_polygon" not in st.session_state:
     st.session_state.selected_polygon = None
 
@@ -33,8 +35,8 @@ if address:
         m = folium.Map(location=[lat, lon], zoom_start=18)
 
         # Add previously drawn polygons to the map
-        for drawing in st.session_state.drawings:
-            folium.GeoJson(drawing, name="Polygon").add_to(m)
+        for p in st.session_state.polygons:
+            folium.GeoJson(p.polygon, name="Polygon").add_to(m)
 
         # Center and add marker on the selected polygon if exists
         if st.session_state.selected_polygon:
@@ -45,7 +47,7 @@ if address:
             m.location = [centroid_lat, centroid_lon]
             m.zoom_start = 18
 
-        # Add drawing control to allow selecting another area
+        # Add polygon control to allow selecting another area
         draw = folium.plugins.Draw(
             export=True,
             draw_options={
@@ -66,23 +68,25 @@ if address:
 
         # Check if a new polygon is drawn
         if map_data and 'all_drawings' in map_data:
-            new_drawings = map_data['all_drawings']
-            if new_drawings:
-                st.session_state.drawings = new_drawings
+            new_polygons = map_data['all_drawings']
+            if new_polygons:
+                for p in new_polygons:
+                    if p in st.session_state.polygons:
+                        st.session_state.polygons.append(PolygonFarmer(p))
 
         # Handle polygon selection
         if map_data and 'last_clicked' in map_data and map_data['last_clicked']:
             last_clicked = map_data['last_clicked']
             click_point = Point(last_clicked['lng'], last_clicked['lat'])
 
-            for drawing in st.session_state.drawings:
-                # Convert the drawing's coordinates to a Shapely Polygon
-                polygon_coords = drawing['geometry']['coordinates'][0]
+            for polygon in st.session_state.polygons:
+                # Convert the polygon's coordinates to a Shapely Polygon
+                polygon_coords = polygon['geometry']['coordinates'][0]
                 polygon = Polygon(polygon_coords)
 
                 # Check if the clicked point is inside the polygon
                 if polygon.contains(click_point):
-                    st.session_state.selected_polygon = drawing
+                    st.session_state.selected_polygon = polygon
                     break
 
 # Display selected polygon details below the map
