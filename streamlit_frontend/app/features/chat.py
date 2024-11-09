@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import os
 import time
+import markdown
 
 # Load environment variables
 load_dotenv()
@@ -13,57 +14,107 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 SPACE_DATA_TYPES = ['flood risk', 'irrigation', 'fire risk']
 
 # Session state initialization
-# Contains: messages, last_valid_type, last_valid_location
-if 'messages' not in st.session_state: st.session_state.messages = []
-if 'last_valid_type' not in st.session_state: st.session_state.last_valid_type = None
-if 'last_valid_location' not in st.session_state: st.session_state.last_valid_location = None
+# Contains: messages
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+possible_function_callbacks = {
+    "create_areas_to_monitor": "pages/chat_polygonSelection.py",
+}
 
 # Clean user query
 def clean_user_query(user_query):
-    system_prompt = f"""
-    Extract data type and city from user query.
-    Valid data types are ONLY: {', '.join(SPACE_DATA_TYPES)}.
-    Format output EXACTLY as: DATA_TYPE||CITY
-    If data type not valid, output 'invalid' as DATA_TYPE.
-    If not a real city, output 'missing' as CITY.
+    system_prompt = '''You are an Earth Observation (EO) Assistant, specialized in making satellite data accessible and actionable for users. Your role is to bridge the gap between technical EO capabilities and practical user needs.
 
-    EXAMPLES
-	Input: wildfire risk in australia
-	Output: fire risk||missing
-	
-	Input: should i worry of tornadoes in munich of baviera
-	Output: invalid||Munich
-    """
-    response = client.chat.completions.create(model="gpt-4o",
-        messages=[{"role": "system", "content": system_prompt}, 
-        {"role": "user", "content": f"User query: {user_query}"}],
-        temperature=0.3, max_tokens=100)
+    RESPONSIBILITIES:
+    1. Education: Help users understand how Earth observation can benefit their specific use case
+    2. Guidance: Direct users to appropriate analysis tools and visualizations (or simply be helpful)
+    3. Analysis: Facilitate data interpretation and insights
+
+    STYLE:
+    - Use markdown formatting
+    - Provide concise responses with bullet points for clarity when appropriate
+    - Avoid walls of text or walls of bullet points (max 3 bullet points)
+    - Avoid technical jargon (e.g. "EO" or "function" or "parameter")
+
+    STRATEGY:
+    - Explain EO data and how it can be useful in your first 2 messages
+    - If we don't have a function for the user's query, reply with useful answers (linking to resources) and give user a hint about what we can help with
+    - If the user's query is not clear, ask for clarification in a few back-and-forth messages
+
+    FUNCTION CALL:
+    - Confirm input parameter details (e.g., their city or address) before calling a function
+    - When ready to call a function, format your response exactly as: function_name||param1||param2||paramN
+    - Do NOT include any other text or formatting in the message where you call a function
+
+    AVAILABLE FUNCTIONS:
+    create_areas_to_monitor(location)
+    - Purpose: Set up monitoring zones for vegetation and environmental analysis
+    - Parameter: location (like a city or street, something you could type into google maps. NOT a country)
+    - Best for: Agricultural, forestry, and land management applications
+    - Description: Allows the user to mark areas of interest on a map based on a location input, enabling them to receive insights like vegetation health, soil moisture, irrigation needs, and environmental conditions.
+    '''
+
+    # Convert session state messages to OpenAI format
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in st.session_state.messages:
+        role = "user" if msg["is_user"] else "assistant"
+        messages.append({"role": role, "content": msg["content"]})
+
+    # Generate response
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        temperature=0.3,
+        max_tokens=200)
     return response.choices[0].message.content
 
 # Get assistant response
-def get_assistant_response(data_type, location):
-    # Store valid parameters
-    if data_type != 'invalid': st.session_state.last_valid_type = data_type
-    if location != 'missing': st.session_state.last_valid_location = location
-    
-    final_type = st.session_state.last_valid_type or data_type
-    final_location = st.session_state.last_valid_location or location
+def check_function_callback(response):
+    # check if response has || to indicate a function callback
+    if "||" in response:
+        callback_id, args = response.split("||")
+        if callback_id in possible_function_callbacks:
+            return f"Callback: {callback_id} with args: {args}"
+    return response
 
-    if final_type == 'invalid' and final_location == 'missing':
-        return f"Sorry, I need both a city location and the type of spatial information ({', '.join(SPACE_DATA_TYPES)})."
-    elif final_type == 'invalid':
-        return f"Sorry, I can only help with {', '.join(SPACE_DATA_TYPES)}. Which one interests you for {final_location}?"
-    elif final_location == 'missing':
-        return f"Please type a city name to visualize the {final_type} data."
-    return f"Great! Showing {final_type} data for {final_location}..."
+# Create the HTML for a message bubble with consistent styling.
+def create_message_html(html_content, style, bg_color):
+    return (f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
+            f'<div style="background-color: {bg_color}; color: white; padding: 0.5rem 1rem; '
+            f'border-radius: 15px; max-width: 80%;">{html_content}</div></div>')
 
-def display_message(text, is_user=False):
+def display_message(text, is_user=False, with_delay=False):
     style = "flex-end" if is_user else "flex-start"
     bg_color = "#2b313e" if is_user else "#0e1117"
-    st.markdown(
-        f'<div style="display: flex; justify-content: {style}; margin-bottom: 1rem;">'
-        f'<div style="background-color: {bg_color}; color: white; padding: 0.75rem; '
-        f'border-radius: 15px; max-width: 80%;">{text}</div></div>', unsafe_allow_html=True)
+    
+    if not with_delay:
+        html_content = markdown.markdown(text)
+        st.markdown(create_message_html(html_content, style, bg_color), unsafe_allow_html=True)
+        return
+
+    # Split text into lines first to preserve markdown formatting
+    lines = text.split('\n')
+    placeholder = st.empty()
+    displayed_lines = []
+    
+    for line in lines:
+        # For each line, split into words and display progressively
+        words = line.split()
+        for i in range(len(words)):
+            current_line = ' '.join(words[:i+1])
+            # Combine with previously displayed lines
+            current_text = '\n'.join(displayed_lines + [current_line])
+            html_content = markdown.markdown(current_text)
+            
+            placeholder.markdown(
+                create_message_html(html_content, style, bg_color),
+                unsafe_allow_html=True
+            )
+            time.sleep(0.03)
+        
+        # After completing a line, add it to displayed lines
+        displayed_lines.append(line)
 
 def main():
     # Set page config
@@ -75,6 +126,11 @@ def main():
         textarea[data-testid="stChatInputTextArea"] {
             font-size: 18px !important
         }
+        p, li { font-size: 18px !important }
+        
+        .stMarkdown div div p { 
+            margin: 0 !important;
+        }
         h1 a {display: none !important}
         </style>""", unsafe_allow_html=True)
     st.markdown("<br><br><h1 style='text-align: center;'>How can space data help you? 🌍</h1>", unsafe_allow_html=True)
@@ -82,9 +138,9 @@ def main():
     # Only show example queries if there are no messages yet AND no current query
     if not st.session_state.messages and not st.session_state.get('current_query'):
         example_queries = [
-            ("💧 Irrigation in Madrid", "How often do I need to water my crops in Madrid?"),
-            ("🔥 Fire risk in Athens", "What's the wildfire danger level in Athens?"),
-            ("🌊 Flood risk in Mumbai", "What is the flood risk in Mumbai?")]
+            ("🚜 Small farm in the Alps", "I'm a small farmer in the Alps. How can I use space data?"),
+            ("🔥 Fire risk in Athens", "What's the wildfire risk in Athens?"),
+            ("🌊 Flood risk in Mumbai", "What's the flood risk in Mumbai?")]
 
         # Create example buttons
         for button_text, full_example_query in zip(st.columns(3), example_queries):
@@ -93,45 +149,38 @@ def main():
                 st.rerun()  # Immediately rerun to clear buttons
 
     current_query = st.chat_input("Message MapStronaut") or st.session_state.get('current_query')
-    
+
     if current_query:
         # Immediately show the user's message
         st.session_state.messages.append({"content": current_query, "is_user": True})
-        
-        # Display all messages including the new user message
-        for message in st.session_state.messages:
+
+        # Display all previous messages without delay
+        for message in st.session_state.messages[:-1]:
             display_message(message['content'], message['is_user'])
         
-        # Process the response
-        data_type, location = clean_user_query(current_query).split('||')
-        response = get_assistant_response(data_type, location)
+        # Display user's new message
+        display_message(current_query, True)
         
-        # Add assistant's response to messages
-        st.session_state.messages.append({"content": response, "is_user": False})
-        
-        # Wait 1 second before showing output (otherwise it's too fast)
-        time.sleep(1)
+        # Add spinner while processing response
+        with st.spinner(''):
+            ai_resp = clean_user_query(current_query)
+            response = check_function_callback(ai_resp)
+            
+            # Add assistant's response to messages
+            st.session_state.messages.append({"content": response, "is_user": False})
+            
+        # Display the AI response with delay effect
+        display_message(response, False, with_delay=True)
 
         # Clear current query and rerun
         st.session_state.pop('current_query', None)
+        time.sleep(0.5)  # Small pause before rerun
         st.rerun()
+    
     else:
         # Display existing messages when no new query
         for message in st.session_state.messages:
             display_message(message['content'], message['is_user'])
-
-    # Display map visualization if available
-    if st.session_state.last_valid_type and st.session_state.last_valid_location:
-        time.sleep(2)
-        st.info("Visualization here", icon="📍")
-        st.markdown("""
-            <style>
-            [data-testid="stAlertContentInfo"] {
-                min-height: 300px;
-                padding: 20px;
-            }
-            </style>
-        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
