@@ -6,3 +6,7 @@ rasterio
 geemap
 leafmap
 streamlit-image-comparison
+
+# For Copernicus
+python-dotenv
+sentinelhub
