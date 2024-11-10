@@ -24,6 +24,10 @@ SPACE_DATA_TYPES = ['flood risk', 'irrigation', 'fire risk']
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
+# Contains: fetched_data
+if 'fetched_data' not in st.session_state:
+    st.session_state.fetched_data = {}
+
 possible_function_callbacks = {
     "create_areas_to_monitor": "pages/chat_polygonSelection.py",
 }
@@ -61,13 +65,26 @@ def clean_user_query(user_query):
     - Best for: Agricultural, forestry, and land management applications
     - Description: Allows the user to mark areas of interest on a map based on a location input, enabling them to receive insights like vegetation health, soil moisture, irrigation needs, and environmental conditions.
     '''
+    fetched_data_context = "\n".join(
+        [f"Polygon {id}: Water: {data['water']}%, Soil Moisture: {data['soil_moisture']}%, "
+         f"Vegetation Health: {data['vegetation_health']}%, Temperature: {data['temperature']}°C, "
+         f"Humidity: {data['humidity']}%"
+         for id, data in st.session_state.fetched_data.items()]
+    )
 
     # Convert session state messages to OpenAI format
     messages = [{"role": "system", "content": system_prompt}]
     for msg in st.session_state.messages:
+        if type(msg["content"]) is type(()):
+            content = f"Function callback: {msg['content'][1]}"
+        else:
+            content = msg["content"]
         role = "user" if msg["is_user"] else "assistant"
-        messages.append({"role": role, "content": msg["content"]})
+        messages.append({"role": role, "content": content})
 
+    messages.append({"role": "system", "content": str(fetched_data_context)})
+
+    print(messages)
     # Generate response
     response = client.chat.completions.create(
         model="gpt-4o",

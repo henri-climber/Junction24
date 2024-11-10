@@ -1,12 +1,13 @@
 from shapely.geometry import Polygon
-
+import streamlit as st
 from backend.model.predict import predict_on_polygon
 
 
 class PolygonFarmer:
 
     # create a class for every single polygon
-    def __init__(self, polygon, fetched_data=False, water=None, soil_moisture=None, vegetation_health=None):
+    def __init__(self, x: int, polygon, fetched_data=False, water=None, soil_moisture=None, vegetation_health=None):
+        self.pid: int = x
         self.polygon = polygon
         self.water = water
         self.fetched_data = fetched_data
@@ -107,3 +108,19 @@ class PolygonFarmer:
         self.temperature = current_temp
         self.humidity = current_humidity
         self.fetched_data = True
+
+        if "fetched_data" not in st.session_state:
+            st.session_state.fetched_data = {}
+        else:
+            # add fetched data to the session state
+            st.session_state.fetched_data[f"polygon_{self.pid}"] = {
+                "water": self.water,
+                "soil_moisture": self.soil_moisture,
+                "vegetation_health": self.vegetation_health,
+                "temperature": self.temperature,
+                "humidity": self.humidity
+            }
+
+    def __str__(self):
+        return (f"Polygon with area {self.area} and centroid {self.centroid} with color {self.color}\n Data: "
+                f"Water: {self.water}, Soil Moisture: {self.soil_moisture}, Vegetation Health: {self.vegetation_health}, ")

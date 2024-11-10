@@ -17,7 +17,7 @@ def polygon_details_page(polygon: PolygonFarmer):
         return str(value)
 
     # Title
-    st.title("Showing Details for Selected Polygon")
+    st.title(f"Showing Details for Selected Polygon {polygon.pid}")
 
     # Create three columns for the main metrics
     col1, col2, col3 = st.columns(3)

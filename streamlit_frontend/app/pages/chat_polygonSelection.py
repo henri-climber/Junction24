@@ -75,7 +75,13 @@ def create_areas_to_monitor(location: str):
         if map_data and 'all_drawings' in map_data and map_data['all_drawings']:
             for p in map_data['all_drawings']:
                 print("add drawing")
-                polygon_farmer = PolygonFarmer(p)
+                # find the last id
+                last_id = 0
+                for polygon in st.session_state.polygons:
+                    if polygon.pid > last_id:
+                        last_id = polygon.pid
+
+                polygon_farmer = PolygonFarmer(last_id + 1, p)
                 st.session_state.polygons.append(polygon_farmer)
                 polygon_farmer.fetch_data()
 

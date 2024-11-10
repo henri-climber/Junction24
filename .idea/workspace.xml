@@ -4,24 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8f3b2886-9046-4165-95ad-3779445280a9" name="Changes" comment="new chat code">
-      <change afterPath="$PROJECT_DIR$/streamlit_frontend/backend/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="8f3b2886-9046-4165-95ad-3779445280a9" name="Changes" comment="merge chat with data analysis">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/irrigation.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/irrigation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/irrigation_dataset.csv" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/irrigation_dataset.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/irrigation_model.joblib" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/irrigation_model.joblib" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/predict.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/predict.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/scrap_sentinel.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/scrap_sentinel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/model/weather.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/model/weather.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/backend/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/Models/Polygon_farmer.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/Models/Polygon_farmer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_dashboard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_polygonSelection.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_polygonSelection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/chat_result.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/streamlit_frontend/app/pages/features/chat.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_frontend/app/pages/features/chat.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -137,7 +124,7 @@
       <workItem from="1731120278361" duration="474000" />
       <workItem from="1731120855022" duration="106000" />
       <workItem from="1731173222325" duration="645000" />
-      <workItem from="1731206742349" duration="2174000" />
+      <workItem from="1731206742349" duration="7397000" />
     </task>
     <task id="LOCAL-00001" summary="basic streamlit setup">
       <option name="closed" value="true" />
@@ -163,7 +150,15 @@
       <option name="project" value="LOCAL" />
       <updated>1731120915365</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="merge chat with data analysis">
+      <option name="closed" value="true" />
+      <created>1731208937214</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1731208937214</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -183,7 +178,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="basic streamlit setup" />
     <MESSAGE value="setup with gee" />
-    <option name="LAST_COMMIT_MESSAGE" value="setup with gee" />
+    <MESSAGE value="merge chat with data analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="merge chat with data analysis" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Junction24$predict.coverage" NAME="predict Coverage Results" MODIFIED="1731185827956" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/model" />
