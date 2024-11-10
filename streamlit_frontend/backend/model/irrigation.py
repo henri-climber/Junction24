@@ -1,4 +1,4 @@
-from scrap_sentinel import get_data
+from backend.model.scrap_sentinel import get_data
 from datetime import datetime, timedelta
 
 today = datetime.today()

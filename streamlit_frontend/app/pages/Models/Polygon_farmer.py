@@ -1,5 +1,7 @@
 from shapely.geometry import Polygon
 
+from backend.model.predict import predict_on_polygon
+
 
 class PolygonFarmer:
 
@@ -13,6 +15,8 @@ class PolygonFarmer:
         self.centroid = self.polygon_centroid()
         self.area = self.calculate_area()
         self.color = self.calculate_color()
+        self.temperature = None
+        self.humidity = None
 
     from shapely.geometry import Polygon
 
@@ -82,3 +86,24 @@ class PolygonFarmer:
         else:
             self.color = '#33FF00'
         return self.color
+
+    def fetch_data(self):
+        # fetch data from API
+        coords = self.polygon["geometry"]["coordinates"][0]
+        print("hjere")
+        should_irrigate, evi_index, moisture_stress, current_temp, current_humidity = predict_on_polygon(coords)
+
+        # process predicted data
+        self.water = should_irrigate
+
+        # convert the values to percentage
+
+        # moisture stress is in range -1 to 1
+        self.soil_moisture = (moisture_stress + 1) * 50
+
+        # evi index is in range 0 to 1
+        self.vegetation_health = evi_index * 100
+
+        self.temperature = current_temp
+        self.humidity = current_humidity
+        self.fetched_data = True

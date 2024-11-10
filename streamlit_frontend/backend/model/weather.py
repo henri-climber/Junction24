@@ -85,11 +85,16 @@ def check_for_rain(lat, lon):
         if forecast_time <= datetime.datetime.now() + datetime.timedelta(days=3):
             forecasted_precipitation += forecast.get("rain", {}).get("3h", 0)
 
+    # get current temperature and humidity
+    current_temp = current_weather.get("main", {}).get("temp")
+    current_humidity = current_weather.get("main", {}).get("humidity")
+    print(current_temp, current_humidity)
+
     # Determine irrigation need
     if current_precipitation > 5 or forecasted_precipitation > 10:
-        return True
+        return True, current_temp, current_humidity
     else:
-        return False
+        return False, current_temp, current_humidity
 
 
 if __name__ == "__main__":

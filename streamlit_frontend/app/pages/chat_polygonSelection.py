@@ -36,6 +36,18 @@ def create_areas_to_monitor(location: str):
         location = geolocator.geocode(st.session_state.location)
         lat, lon = location.latitude, location.longitude
 
+        # if there are already drawings, make lat, lon the average of all the polygons
+        if st.session_state.polygons:
+            sum_lat = 0
+            sum_lon = 0
+            for p in st.session_state.polygons:
+                coords = p.polygon['geometry']['coordinates'][0][0]
+                sum_lat += coords[1]
+                sum_lon += coords[0]
+
+            lat = sum_lat / len(st.session_state.polygons)
+            lon = sum_lon / len(st.session_state.polygons)
+
         # Create a folium map centered on the address
         m = folium.Map(location=[lat, lon], zoom_start=18)
 
@@ -62,7 +74,11 @@ def create_areas_to_monitor(location: str):
         # Check if a polygon was drawn and extract its coordinates
         if map_data and 'all_drawings' in map_data and map_data['all_drawings']:
             for p in map_data['all_drawings']:
-                st.session_state.polygons.append(PolygonFarmer(p))
+                print("add drawing")
+                polygon_farmer = PolygonFarmer(p)
+                st.session_state.polygons.append(polygon_farmer)
+                polygon_farmer.fetch_data()
+
             st.rerun()  # Refresh the map after drawing a polygon
 
         # Add a submit button

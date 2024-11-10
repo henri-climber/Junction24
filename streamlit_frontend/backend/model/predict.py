@@ -1,19 +1,31 @@
 import joblib
 import pandas as pd
+import os
 
-from irrigation import fetch_sentinel_data
-from weather import check_for_rain, polygon_centroid
+from backend.model.irrigation import fetch_sentinel_data
+from backend.model.weather import check_for_rain, polygon_centroid
 
 
-def predict(polygon_coords):
-
+def predict_on_polygon(polygon_coords):
+    """
+    Predict whether to irrigate based on the Sentinel-2 and weather data.
+    :param polygon_coords: List of coordinates of the polygon
+    :return:
+    Prediction - Whether to irrigate or not
+    EVI Index - healthy if > 0.2,
+    Moisture Stress -  -1 < dry < 0 < low < 0.2 < moderate < 0.4 < high
+    Current Temperature - Temperature at the centroid of the polygon
+    Current Humidity - Humidity at the centroid of the polygon
+    """
     # Load the model
-    model = joblib.load("irrigation_model.joblib")
+    cwd = os.getcwd()
+    model = joblib.load(f"{cwd}/backend/model/irrigation_model.joblib")
 
     # fetch the data
-    results, _ = fetch_sentinel_data(polygon_coords)
+    results, images = fetch_sentinel_data(polygon_coords)
+    print(images)
     lon, lat = polygon_centroid(polygon_coords)
-    rain_presence = check_for_rain(lat, lon)
+    rain_presence, current_temp, current_humidity = check_for_rain(lat, lon)
 
     # Evaluating
     if results["Moisture Stress"] > 0.4:
@@ -48,7 +60,7 @@ def predict(polygon_coords):
 
     # Predict
     prediction = model.predict(input_df)
-    return prediction[0]
+    return prediction[0], results["EVI Index"], results["Moisture Stress"], current_temp, current_humidity
 
 
 if __name__ == "__main__":
@@ -60,4 +72,4 @@ if __name__ == "__main__":
         [16.2641, 52.658243],
         [16.249166, 52.656369],
     ]
-    print(predict(polygon_coords))
+    print(predict_on_polygon(polygon_coords))

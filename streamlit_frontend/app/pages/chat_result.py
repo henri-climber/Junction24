@@ -6,6 +6,7 @@ from geopy.geocoders import Nominatim
 from shapely.geometry import Point, Polygon
 from typing import Optional
 from app.pages.Models.Polygon_farmer import PolygonFarmer
+from app.pages.chat_dashboard import polygon_details_page
 
 
 def select_and_display_details_for_polygon():
@@ -97,5 +98,4 @@ def select_and_display_details_for_polygon():
 
     # Display selected polygon details below the map
     if st.session_state.selected_polygon:
-        st.write("### Selected Polygon Details")
-        # Additional information can be added here
+        polygon_details_page(st.session_state.selected_polygon)

@@ -7,6 +7,11 @@ import time
 import markdown
 from app.pages.chat_polygonSelection import create_areas_to_monitor
 
+# Set page config but make sure to only call once
+if 'page_configured' not in st.session_state:
+    st.set_page_config(page_title="MapStronaut", page_icon="🌍")
+    st.session_state.page_configured = True
+
 # Load environment variables
 load_dotenv()
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -23,8 +28,6 @@ possible_function_callbacks = {
     "create_areas_to_monitor": "pages/chat_polygonSelection.py",
 }
 
-
-# Clean user query
 
 # Clean user query
 def clean_user_query(user_query):
@@ -131,9 +134,6 @@ def display_message(text, is_user, with_delay=False):
 
 
 def main():
-    # Set page config
-    st.set_page_config(page_title="MapStronaut", page_icon="🌍")
-
     # Set font sizes
     st.markdown("""<style>
         .stMarkdown div div { font-size: 18px !important}
@@ -147,14 +147,20 @@ def main():
     # Only show example queries if there are no messages yet AND no current query
     if not st.session_state.messages and not st.session_state.get('current_query'):
         example_queries = [
-            ("💧 Irrigation in Madrid", "How often do I need to water my crops in Madrid?"),
-            ("🔥 Fire risk in Athens", "What's the wildfire danger level in Athens?"),
-            ("🌊 Flood risk in Mumbai", "What is the flood risk in Mumbai?")]
+            ("🏘", "Real estate company",
+             "I have a small real estate company in Munich. What are the best areas to buy new houses according to EO?"),
+            ("🌳", "Local government",
+             "Hey, I work for the local government in Madrid. How can I optimize the irrigation process of our parks?"),
+            ("🌊", "Best time surfing", "I am a surfer in Australia? Can space data help me find the best time to surf?")
+        ]
+
+        # Create columns
+        cols = st.columns(3)
 
         # Create example buttons
-        for button_text, full_example_query in zip(st.columns(3), example_queries):
-            if button_text.button(full_example_query[0]):
-                st.session_state['current_query'] = full_example_query[1]
+        for col, (icon, button_text, full_example_query) in zip(cols, example_queries):
+            if col.button(button_text, use_container_width=True, icon=icon):
+                st.session_state['current_query'] = full_example_query
                 st.rerun()  # Immediately rerun to clear buttons
 
     current_query = st.chat_input("Message MapStronaut") or st.session_state.get('current_query')
